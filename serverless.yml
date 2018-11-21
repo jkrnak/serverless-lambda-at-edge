@@ -1,0 +1,32 @@
+service: LambdaAtEdge
+
+provider:
+  name: aws
+  runtime: nodejs8.10
+  region: us-east-1
+
+resources:
+  Resources:
+    LambdaAtEdgeRole:
+      Type: AWS::IAM::Role
+      Properties:
+        RoleName: lambda-at-edge-role
+        AssumeRolePolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Principal:
+                # we give access to the Lambda and Lambda@Edge service to assume our role
+                Service:
+                  - lambda.amazonaws.com
+                  - edgelambda.amazonaws.com
+              Action: sts:AssumeRole
+        ManagedPolicyArns:
+          # we are giving access to write to cloudwatch logs, managed policies are very permissive
+          # consider writing your own more restrictive policies
+          - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+
+functions:
+  cache-control:
+    handler: handler.handler # <filename>.<exported-function>
+    role: LambdaAtEdgeRole   # we reference the resource we created earlier
